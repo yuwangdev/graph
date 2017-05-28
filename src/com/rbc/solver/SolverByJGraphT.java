@@ -3,8 +3,6 @@ package com.rbc.solver;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.jgrapht.Graph;
-import org.jgrapht.UndirectedGraph;
-import org.jgrapht.alg.ConnectivityInspector;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.ListenableUndirectedWeightedGraph;
 import org.jgrapht.traverse.RandomWalkIterator;
@@ -46,6 +44,7 @@ public class SolverByJGraphT {
 
 
     public Graph<String, DefaultWeightedEdge> initializeGraph(String filePath) {
+        System.out.println("Start to initilize the graph into JGraphT");
         ListenableUndirectedWeightedGraph<String, DefaultWeightedEdge> listenableUndirectedWeightedGraph = new ListenableUndirectedWeightedGraph<String, DefaultWeightedEdge>(DefaultWeightedEdge.class);
         List<List<Double>> rawData = Lists.newArrayList();
 
@@ -59,15 +58,19 @@ public class SolverByJGraphT {
             listenableUndirectedWeightedGraph.addVertex(VERTEX_PREFIX + i);
         }
 
+        System.out.println("Load all vertices into JGraphT");
+
         for (int i = 0; i < rawData.size(); i++) {
             List<Double> row = rawData.get(i);
             for (int j = 0; j < row.size(); j++) {
-                if (row.get(j) > 0.0) {
+                if (row.get(j) > 0.0 && !(VERTEX_PREFIX + i).equalsIgnoreCase(VERTEX_PREFIX + j)) {
                     listenableUndirectedWeightedGraph.addEdge(VERTEX_PREFIX + i, VERTEX_PREFIX + j);
                     listenableUndirectedWeightedGraph.setEdgeWeight(listenableUndirectedWeightedGraph.getEdge(VERTEX_PREFIX + i, VERTEX_PREFIX + j), row.get(j));
                 }
             }
         }
+
+        System.out.println("Load all edges and weights into JGraphT");
         this.graph = listenableUndirectedWeightedGraph;
         this.connectionCache = prepareConnectionCache();
 
@@ -81,6 +84,7 @@ public class SolverByJGraphT {
                 map.put(VERTEX_PREFIX + i + "-" + VERTEX_PREFIX + j, checkPathExisted(VERTEX_PREFIX + i, VERTEX_PREFIX + j));
             }
         }
+        System.out.println("Load connectivity info into cache");
         return map;
     }
 
@@ -88,8 +92,9 @@ public class SolverByJGraphT {
         if (t1.equalsIgnoreCase(t2)) {
             return true;
         }
-        ConnectivityInspector<String, DefaultWeightedEdge> connectivityInspector = new ConnectivityInspector<String, DefaultWeightedEdge>((UndirectedGraph) this.graph);
-        return connectivityInspector.pathExists(t1, t2);
+        //   ConnectivityInspector<String, DefaultWeightedEdge> connectivityInspector = new ConnectivityInspector<String, DefaultWeightedEdge>((UndirectedGraph) this.graph);
+        //  return connectivityInspector.pathExists(t1, t2);
+        return true;
     }
 
     public int computeDistancePerIteraionBetweenTwoPoint(String t1, String t2) {
@@ -113,7 +118,7 @@ public class SolverByJGraphT {
             if (currentVertex.equals(t2)) {
                 break;
             }
-            if (!currentVertex.equals(t2) && distance == 1000) {
+            if (!currentVertex.equals(t2) && distance == 50000) {
                 break;
             }
         }
@@ -130,7 +135,7 @@ public class SolverByJGraphT {
             sum += computeDistancePerIteraionBetweenTwoPoint(t1, t2);
             epoch++;
         }
-        //System.out.println("Distance expectaion between: " + t1 + " and " + t2 + " = " + sum / ITERATION);
+        System.out.println("Distance expectaion between: " + t1 + " and " + t2 + " = " + sum / ITERATION);
         return sum >= 0.0 ? sum / ITERATION : -1.0;
     }
 
